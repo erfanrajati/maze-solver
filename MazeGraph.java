@@ -20,6 +20,11 @@ public class MazeGraph
             this.i = i;
             this.j = j;
         }
+
+        public String getVertex() {
+            return i + " " + j;
+        }
+        
     }
 
     private class Edge 
@@ -28,8 +33,14 @@ public class MazeGraph
     
         public Edge(Vertex v, Vertex u) 
         {
+            edge = new Vertex[2];
             this.edge[0] = v;
             this.edge[1] = u;
+        }
+
+        public String getEdge()
+        {
+            return "(" + edge[0].i + ", " + edge[0].j + "), (" + edge[1].i + ", " + edge[1].j + ")";
         }
     }
     
@@ -92,18 +103,29 @@ public class MazeGraph
 
     int height = 0;
     int width = 0;
-    int[][] mazeMatrix = {{}};
+    int[][] mazeMatrix;
 
     public MazeGraph(int height, int width) 
     {
+        int temp;
         this.height = height;
         this.width = width;
+
+        mazeMatrix = new int[height][width];
+        
+        for (int[] mazeMatrix1 : mazeMatrix)
+            Arrays.fill(mazeMatrix1, -1);
+
         try (Scanner inputMatrix = new Scanner(System.in)) 
         {
             for (int i = 0; i < height; i++) 
             {
-                for (int j = 0; j < width; j++)
-                    mazeMatrix[i][j] = inputMatrix.nextInt();
+                for (int j = 0; j < width; j++) 
+                {
+                    temp = inputMatrix.nextInt();
+                    // System.out.print(temp);
+                    mazeMatrix[i][j] = temp;
+                }
             }
         }
     }
@@ -111,16 +133,18 @@ public class MazeGraph
     public void rightWallTrace()
     {
         Current current = new Current();
-        int[] finish = {this.height - 2, this.width - 1};
+        int[] start = {1, 0};
         int right = mazeMatrix[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
-        int front = 0; // implement later
 
-        while (current.pose != finish)
+        int[][] mazeMatrixMod = mazeMatrix;
+        mazeMatrixMod[height - 2][width - 1] = 1;
+
+        while (current.pose != start)
         {
-            while (right == 1 && front != 1)
+            while (right == 1)
             {
                 current.advance();
-                right = mazeMatrix[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
+                right = mazeMatrixMod[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
                 Vertex v = new Vertex(current.pose[0], current.pose[1]);
                 this.vertices.add(v);
                 try 
@@ -134,8 +158,21 @@ public class MazeGraph
 
             }
             current.turnRight();
-            right = mazeMatrix[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
+            right = mazeMatrixMod[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
         }
+    }
+
+    public void getGraphData()
+    {
+        System.out.println("Vertices: ");
+        for (Vertex v : vertices)
+            System.out.println(v.getVertex());
+
+        System.out.println();
+
+        System.out.println("Edges: ");
+        for (Edge e : edges)
+            System.out.println(e.getEdge());
     }
 
     // public void addVertex(int v) 

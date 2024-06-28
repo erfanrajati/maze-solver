@@ -2,15 +2,15 @@ import java.util.Scanner;
 
 public class Main 
 {
-    Scanner userIn = new Scanner(System.in);
-    int mazeHeight = userIn.nextInt();
-    int mazeWidth = userIn.nextInt();
-    MazeGraph maze = new MazeGraph(mazeHeight, mazeWidth);
-
-    public void main(String[] args) 
+    public static void main(String[] args) 
     {
-        // System.out.println("Hello, World!");
-        System.out.println();
+        try (Scanner userIn = new Scanner(System.in)) {
+            int mazeHeight = userIn.nextInt();
+            int mazeWidth = userIn.nextInt();
+            MazeGraph maze = new MazeGraph(mazeHeight, mazeWidth);
+            maze.rightWallTrace(); // now the matrix should be converted into a graph.
+            maze.getGraphData();
+        }
     }
 }
 

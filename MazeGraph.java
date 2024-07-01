@@ -17,6 +17,19 @@ public class MazeGraph {
             this.j = j;
         }
 
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Vertex vertex = (Vertex) obj;
+            return i == vertex.i && j == vertex.j;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(i, j);
+        }
+
         public String getVertex() {
             return i + " " + j;
         }
@@ -30,6 +43,20 @@ public class MazeGraph {
             this.u = u;
         }
 
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Edge edge = (Edge) obj;
+            return (Objects.equals(v, edge.v) && Objects.equals(u, edge.u)) ||
+                    (Objects.equals(v, edge.u) && Objects.equals(u, edge.v));
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(v, u);
+        }
+
         public String getEdge() {
             return "(" + v.i + ", " + v.j + "), (" + u.i + ", " + u.j + ")";
         }
@@ -38,7 +65,7 @@ public class MazeGraph {
     private class Current {
         int[] pos = {1, 0};
         Direction face = Direction.RIGHT;
-        int[] right = {0, -1};
+        int[] right = {0, 1};
 
         public void advance() {
             switch (this.face) {
@@ -92,8 +119,8 @@ public class MazeGraph {
         }
     }
 
-    private final ArrayList<Vertex> vertices = new ArrayList<>();
-    private final ArrayList<Edge> edges = new ArrayList<>();
+    private final Set<Vertex> vertices = new HashSet<>();
+    private final Set<Edge> edges = new HashSet<>();
     private final int height, width;
     private final int[][] mazeMatrix;
 
@@ -105,7 +132,13 @@ public class MazeGraph {
         try (Scanner inputMatrix = new Scanner(System.in)) {
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
-                    mazeMatrix[i][j] = inputMatrix.nextInt();
+                    int input = inputMatrix.nextInt();
+                    mazeMatrix[i][j] = input;
+                    System.out.println(input);
+                    System.out.print(i);
+                    System.out.print(" ");
+                    System.out.print(j);
+                    System.out.println(" Added");
                 }
             }
         }
@@ -116,17 +149,32 @@ public class MazeGraph {
         int[][] mazeMatrixMod = Arrays.stream(mazeMatrix).map(int[]::clone).toArray(int[][]::new);
         mazeMatrixMod[height - 2][width - 1] = 1;  // Temporarily block the exit point
 
-        do {
+        // Ensure start position is valid
+        if (mazeMatrix[1][0] == 1) {
+            System.out.println("Invalid start position.");
+            return;
+        }
+
+        Set<Vertex> visitedVertices = new HashSet<>();
+        Vertex start = new Vertex(current.pos[0], current.pos[1]);
+        vertices.add(start);
+        visitedVertices.add(start);
+
+        Vertex previousVertex = null;
+        Direction previousDirection = null;
+        int steps = 0; // To avoid infinite loop
+
+        while (true) {
             int nextI = current.pos[0] + current.right[0];
             int nextJ = current.pos[1] + current.right[1];
 
-            if (mazeMatrixMod[nextI][nextJ] == 0) {
+            if (isInBounds(nextI, nextJ) && mazeMatrixMod[nextI][nextJ] == 0) {
                 current.turnRight();
                 nextI = current.pos[0] + current.right[0];
                 nextJ = current.pos[1] + current.right[1];
             }
 
-            while (mazeMatrixMod[nextI][nextJ] == 1) {
+            while (!isInBounds(nextI, nextJ) || mazeMatrixMod[nextI][nextJ] == 1) {
                 current.turnLeft();
                 nextI = current.pos[0] + current.right[0];
                 nextJ = current.pos[1] + current.right[1];
@@ -134,14 +182,38 @@ public class MazeGraph {
 
             current.advance();
             Vertex v = new Vertex(current.pos[0], current.pos[1]);
-            this.vertices.add(v); // Add vertex
 
-            if (this.vertices.size() > 1) {
-                Vertex u = vertices.get(vertices.size() - 2);
-                Edge e = new Edge(v, u);
-                edges.add(e); // Add edge
+            // Debugging output
+            System.out.println("Current position: (" + current.pos[0] + ", " + current.pos[1] + "), direction: " + current.face);
+
+            // Break if we're back to the start
+            if (v.equals(start) && steps > 0) {
+                break;
             }
-        } while (!(current.pos[0] == 1 && current.pos[1] == 0));
+
+            // Add the vertex if it's not been visited
+            if (!visitedVertices.contains(v)) {
+                visitedVertices.add(v);
+                vertices.add(v);
+            } else if (v.equals(previousVertex) && current.face == previousDirection) {
+                break;
+            }
+
+            // Add the edge if it's not been added
+            Vertex u = new Vertex(current.pos[0] - current.right[0], current.pos[1] - current.right[1]);
+            Edge e = new Edge(v, u);
+            if (!edges.contains(e)) {
+                edges.add(e);
+            }
+
+            previousVertex = v;
+            previousDirection = current.face;
+            steps++;
+        }
+    }
+
+    private boolean isInBounds(int i, int j) {
+        return i >= 0 && i < height && j >= 0 && j < width;
     }
 
     public void getGraphData() {
@@ -157,4 +229,14 @@ public class MazeGraph {
             System.out.println(e.getEdge());
         }
     }
+
+    // public static void main(String[] args) {
+    //     try (Scanner userIn = new Scanner(System.in)) {
+    //         int mazeHeight = userIn.nextInt();
+    //         int mazeWidth = userIn.nextInt();
+    //         MazeGraph maze = new MazeGraph(mazeHeight, mazeWidth);
+    //         maze.rightWallTrace(); // now the matrix should be converted into a graph.
+    //         maze.getGraphData();
+    //     }
+    // }
 }

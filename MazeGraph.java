@@ -59,6 +59,8 @@ public class MazeGraph {
     private final Set<Edge> edges = new HashSet<>();
     private final int height, width;
     private final int[][] mazeMatrix;
+    private Vertex endVertex;
+    private Map<Vertex, Vertex> parentMap = new HashMap<>(); // To reconstruct the shortest path
 
     public MazeGraph(int height, int width) {
         this.height = height;
@@ -73,9 +75,21 @@ public class MazeGraph {
                     } else {
                         System.out.println("Error: Unexpected input at (" + i + ", " + j + ")");
                         return;
-                    }                
+                    }
                 }
             }
+        }
+
+        // Set the end vertex to the first 0 in the last row
+        for (int j = 0; j < width; j++) {
+            if (mazeMatrix[height - 2][j] == 0) {
+                this.endVertex = new Vertex(height - 2, j);
+                break;
+            }
+        }
+        
+        if (this.endVertex == null) {
+            System.out.println("No valid end position found.");
         }
     }
 
@@ -93,6 +107,7 @@ public class MazeGraph {
         queue.add(startVertex);
         visited[start[0]][start[1]] = true;
         vertices.add(startVertex);
+        parentMap.put(startVertex, null); // Mark the start point with no parent
 
         int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
 
@@ -108,6 +123,7 @@ public class MazeGraph {
                     queue.add(neighbor);
                     visited[ni][nj] = true;
                     vertices.add(neighbor);
+                    parentMap.put(neighbor, current);
 
                     Edge edge = new Edge(current, neighbor);
                     edges.add(edge);
@@ -133,4 +149,27 @@ public class MazeGraph {
             System.out.println(e.getEdge());
         }
     }
+
+    public void printShortestPath() {
+        // Check if the end vertex was reached
+        if (endVertex == null || !parentMap.containsKey(endVertex)) {
+            System.out.println("No path to the end vertex.");
+            return;
+        }
+
+        List<Vertex> path = new LinkedList<>();
+        Vertex current = endVertex;
+        
+        while (current != null) {
+            path.add(0, current); // Add to the beginning of the list
+            current = parentMap.get(current);
+        }
+
+        System.out.println("Shortest Path:");
+        for (Vertex v : path) {
+            System.out.println(v.getVertex());
+        }
+    }
+
+
 }

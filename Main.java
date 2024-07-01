@@ -9,6 +9,7 @@ public class Main
             MazeGraph maze = new MazeGraph(mazeHeight, mazeWidth);
             maze.buildGraphBFS(); // now the matrix should be converted into a graph.
             maze.getGraphData();
+            maze.printShortestPath(); // print the shortest path from start to end
         }
     }
 }

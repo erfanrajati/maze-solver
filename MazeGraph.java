@@ -1,22 +1,18 @@
 import java.util.*;
 
-enum Direction
-{
+enum Direction {
     LEFT,
     DOWN,
     RIGHT,
     UP
 }
 
+public class MazeGraph {
 
-public class MazeGraph 
-{
-    private class Vertex
-    {
-        int i = 0;
-        int j = 0;
-        public Vertex(int i, int j)
-        {
+    private class Vertex {
+        int i, j;
+
+        public Vertex(int i, int j) {
             this.i = i;
             this.j = j;
         }
@@ -24,165 +20,141 @@ public class MazeGraph
         public String getVertex() {
             return i + " " + j;
         }
-        
     }
 
-    private class Edge 
-    {
-        Vertex[] edge;
-    
-        public Edge(Vertex v, Vertex u) 
-        {
-            edge = new Vertex[2];
-            this.edge[0] = v;
-            this.edge[1] = u;
+    private class Edge {
+        Vertex v, u;
+
+        public Edge(Vertex v, Vertex u) {
+            this.v = v;
+            this.u = u;
         }
 
-        public String getEdge()
-        {
-            return "(" + edge[0].i + ", " + edge[0].j + "), (" + edge[1].i + ", " + edge[1].j + ")";
-        }
-    }
-    
-    private class Current
-    {
-        int[] pose = {1, 0};
-        Direction face;
-        int[] right;
-
-        public Current()
-        {
-            this.face = Direction.RIGHT;
-            this.right[0] = 1;
-            this.right[1] = 0;
-        }
-
-        public void advance() 
-        {
-            if (this.face == Direction.RIGHT) 
-                this.pose[0] += 1;
-            if (this.face == Direction.DOWN) 
-                this.pose[1] += 1;
-            if (this.face == Direction.LEFT) 
-                this.pose[0] -= 1;
-            if (this.face == Direction.UP) 
-                this.pose[1] -= 1;
-        }
-
-        public void turnRight()
-        {
-            if (this.face == Direction.RIGHT) 
-            {
-                this.face = Direction.DOWN;
-                this.right[0] = 0;
-                this.right[1] = -1;
-            }
-            if (this.face == Direction.DOWN) 
-            {
-                this.face = Direction.LEFT;
-                this.right[0] = -1;
-                this.right[1] = 0;
-            }
-            if (this.face == Direction.LEFT) 
-            {
-                this.face = Direction.UP;
-                this.right[0] = 0;
-                this.right[1] = 1;
-            }
-            if (this.face == Direction.UP) 
-            {
-                this.face = Direction.RIGHT;
-                this.right[0] = 1;
-                this.right[1] = 0;
-            }
+        public String getEdge() {
+            return "(" + v.i + ", " + v.j + "), (" + u.i + ", " + u.j + ")";
         }
     }
 
-    ArrayList<Vertex> vertices = new ArrayList<>();
-    ArrayList<Edge> edges = new ArrayList<>();
+    private class Current {
+        int[] pos = {1, 0};
+        Direction face = Direction.RIGHT;
+        int[] right = {0, -1};
 
-    int height = 0;
-    int width = 0;
-    int[][] mazeMatrix;
+        public void advance() {
+            switch (this.face) {
+                case RIGHT -> this.pos[1]++;
+                case DOWN -> this.pos[0]++;
+                case LEFT -> this.pos[1]--;
+                case UP -> this.pos[0]--;
+            }
+        }
 
-    public MazeGraph(int height, int width) 
-    {
-        int temp;
+        public void turnRight() {
+            switch (this.face) {
+                case RIGHT -> {
+                    this.face = Direction.DOWN;
+                    this.right = new int[]{1, 0};
+                }
+                case DOWN -> {
+                    this.face = Direction.LEFT;
+                    this.right = new int[]{0, -1};
+                }
+                case LEFT -> {
+                    this.face = Direction.UP;
+                    this.right = new int[]{-1, 0};
+                }
+                case UP -> {
+                    this.face = Direction.RIGHT;
+                    this.right = new int[]{0, 1};
+                }
+            }
+        }
+
+        public void turnLeft() {
+            switch (this.face) {
+                case RIGHT -> {
+                    this.face = Direction.UP;
+                    this.right = new int[]{-1, 0};
+                }
+                case DOWN -> {
+                    this.face = Direction.RIGHT;
+                    this.right = new int[]{0, 1};
+                }
+                case LEFT -> {
+                    this.face = Direction.DOWN;
+                    this.right = new int[]{1, 0};
+                }
+                case UP -> {
+                    this.face = Direction.LEFT;
+                    this.right = new int[]{0, -1};
+                }
+            }
+        }
+    }
+
+    private final ArrayList<Vertex> vertices = new ArrayList<>();
+    private final ArrayList<Edge> edges = new ArrayList<>();
+    private final int height, width;
+    private final int[][] mazeMatrix;
+
+    public MazeGraph(int height, int width) {
         this.height = height;
         this.width = width;
+        this.mazeMatrix = new int[height][width];
 
-        mazeMatrix = new int[height][width];
-        
-        for (int[] mazeMatrix1 : mazeMatrix)
-            Arrays.fill(mazeMatrix1, -1);
-
-        try (Scanner inputMatrix = new Scanner(System.in)) 
-        {
-            for (int i = 0; i < height; i++) 
-            {
-                for (int j = 0; j < width; j++) 
-                {
-                    temp = inputMatrix.nextInt();
-                    // System.out.print(temp);
-                    mazeMatrix[i][j] = temp;
+        try (Scanner inputMatrix = new Scanner(System.in)) {
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    mazeMatrix[i][j] = inputMatrix.nextInt();
                 }
             }
         }
     }
 
-    public void rightWallTrace()
-    {
+    public void rightWallTrace() {
         Current current = new Current();
-        int[] start = {1, 0};
-        int right = mazeMatrix[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
+        int[][] mazeMatrixMod = Arrays.stream(mazeMatrix).map(int[]::clone).toArray(int[][]::new);
+        mazeMatrixMod[height - 2][width - 1] = 1;  // Temporarily block the exit point
 
-        int[][] mazeMatrixMod = mazeMatrix;
-        mazeMatrixMod[height - 2][width - 1] = 1;
+        do {
+            int nextI = current.pos[0] + current.right[0];
+            int nextJ = current.pos[1] + current.right[1];
 
-        while (current.pose != start)
-        {
-            while (right == 1)
-            {
-                current.advance();
-                right = mazeMatrixMod[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
-                Vertex v = new Vertex(current.pose[0], current.pose[1]);
-                this.vertices.add(v); // Add vertex
-                try 
-                {
-                    Vertex u = vertices.get(vertices.size() - 2);
-                    Edge e = new Edge(v, u);
-                    edges.add(e); // Add edge
-                }
-                catch (Exception e) 
-                {}
-
+            if (mazeMatrixMod[nextI][nextJ] == 0) {
+                current.turnRight();
+                nextI = current.pos[0] + current.right[0];
+                nextJ = current.pos[1] + current.right[1];
             }
-            current.turnRight();
-            right = mazeMatrixMod[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
-        }
+
+            while (mazeMatrixMod[nextI][nextJ] == 1) {
+                current.turnLeft();
+                nextI = current.pos[0] + current.right[0];
+                nextJ = current.pos[1] + current.right[1];
+            }
+
+            current.advance();
+            Vertex v = new Vertex(current.pos[0], current.pos[1]);
+            this.vertices.add(v); // Add vertex
+
+            if (this.vertices.size() > 1) {
+                Vertex u = vertices.get(vertices.size() - 2);
+                Edge e = new Edge(v, u);
+                edges.add(e); // Add edge
+            }
+        } while (!(current.pos[0] == 1 && current.pos[1] == 0));
     }
 
-    public void getGraphData()
-    {
+    public void getGraphData() {
         System.out.println("Vertices: ");
-        for (Vertex v : vertices)
+        for (Vertex v : vertices) {
             System.out.println(v.getVertex());
+        }
 
         System.out.println();
 
         System.out.println("Edges: ");
-        for (Edge e : edges)
+        for (Edge e : edges) {
             System.out.println(e.getEdge());
+        }
     }
-
-    // public void addVertex(int v) 
-    // {
-    //     vertices.add(v);
-    // }
-
-    // public void addEdge(int v, int u) 
-    // {
-    //     int[] edge = {v, u};
-    //     edges.add(edge);
-    // }
 }

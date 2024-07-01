@@ -74,20 +74,20 @@ public class MazeGraph {
                         mazeMatrix[i][j] = inputMatrix.nextInt();
                     } else {
                         System.out.println("Error: Unexpected input at (" + i + ", " + j + ")");
-                        return;
+                        inputMatrix.next(); // Skip the unexpected input
                     }
                 }
             }
         }
 
-        // Set the end vertex to the first 0 in the last row
-        for (int j = 0; j < width; j++) {
+        // Set the end vertex to the last 0 in the second-to-last row
+        for (int j = width - 1; j >= 0; j--) {
             if (mazeMatrix[height - 2][j] == 0) {
                 this.endVertex = new Vertex(height - 2, j);
                 break;
             }
         }
-        
+
         if (this.endVertex == null) {
             System.out.println("No valid end position found.");
         }
@@ -159,7 +159,7 @@ public class MazeGraph {
 
         List<Vertex> path = new LinkedList<>();
         Vertex current = endVertex;
-        
+
         while (current != null) {
             path.add(0, current); // Add to the beginning of the list
             current = parentMap.get(current);
@@ -170,6 +170,4 @@ public class MazeGraph {
             System.out.println(v.getVertex());
         }
     }
-
-
 }

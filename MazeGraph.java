@@ -146,12 +146,12 @@ public class MazeGraph
                 current.advance();
                 right = mazeMatrixMod[current.pose[0] + current.right[0]][current.pose[1] + current.right[1]];
                 Vertex v = new Vertex(current.pose[0], current.pose[1]);
-                this.vertices.add(v);
+                this.vertices.add(v); // Add vertex
                 try 
                 {
                     Vertex u = vertices.get(vertices.size() - 2);
                     Edge e = new Edge(v, u);
-                    edges.add(e);
+                    edges.add(e); // Add edge
                 }
                 catch (Exception e) 
                 {}

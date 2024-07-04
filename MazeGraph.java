@@ -55,8 +55,11 @@ public class MazeGraph {
         }
     }
 
+    // Main fields of Graph ADT
     private final Set<Vertex> vertices = new HashSet<>();
     private final Set<Edge> edges = new HashSet<>();
+
+    // Needed Later on
     private final int height, width;
     private final int[][] mazeMatrix;
     private Vertex endVertex;
@@ -95,7 +98,7 @@ public class MazeGraph {
 
     public void buildGraphBFS() {
         boolean[][] visited = new boolean[height][width];
-        Queue<Vertex> queue = new LinkedList<>();
+        Queue<Vertex> frontier = new LinkedList<>();
         int[] start = {1, 0};
 
         if (mazeMatrix[start[0]][start[1]] == 1) {
@@ -104,15 +107,15 @@ public class MazeGraph {
         }
 
         Vertex startVertex = new Vertex(start[0], start[1]);
-        queue.add(startVertex);
+        frontier.add(startVertex);
         visited[start[0]][start[1]] = true;
         vertices.add(startVertex);
         parentMap.put(startVertex, null); // Mark the start point with no parent
 
         int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
 
-        while (!queue.isEmpty()) {
-            Vertex current = queue.poll();
+        while (!frontier.isEmpty()) {
+            Vertex current = frontier.poll();
 
             for (int[] direction : directions) {
                 int ni = current.i + direction[0];
@@ -120,7 +123,7 @@ public class MazeGraph {
 
                 if (isInBounds(ni, nj) && mazeMatrix[ni][nj] == 0 && !visited[ni][nj]) {
                     Vertex neighbor = new Vertex(ni, nj);
-                    queue.add(neighbor);
+                    frontier.add(neighbor);
                     visited[ni][nj] = true;
                     vertices.add(neighbor);
                     parentMap.put(neighbor, current);
